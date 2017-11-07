@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/series-label.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="http://underscorejs.org/underscore-min.js"></script>
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    <div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+
+    <script type="text/javascript">
+        function metricas(){
+          var resp = [{
+            nombre: 'ETH',
+            valor: 0
+          },
+          {
+            nombre: 'BTC',
+            valor: 0
+          },
+          {
+            nombre: 'DASH',
+            valor: 0
+          }];
+          if (!_.isUndefined(chart)) {
+            _.each(resp, (v,l) => {
+              $.ajax({
+                  url: `https://min-api.cryptocompare.com/data/price?fsym=${v.nombre}&tsyms=CLP`,
+                  type: "GET",
+                  async: true,
+                  success: function (json) {
+                    //console.log(json,l);
+                    chart.series[l].addPoint([(new Date()).getTime(),json.CLP],true);
+                  },
+                  error: function(jqXHR, textStatus, errorThrown) {
+                     console.log(textStatus, errorThrown);
+                  }
+              });
+            });
+          }
+          obtenerMetricas = setTimeout(metricas,5000);
+        }
+        var chart = Highcharts.chart('container', {
+          chart: {
+              type: 'spline',
+              events: {
+                  load: metricas
+              }
+          },
+          title: {
+              text: 'Precio monedas electronicas cada 5 segundos'
+          },
+          subtitle: {
+              text: 'ETH,BTC,DASH'
+          },
+          xAxis: {
+              type: 'datetime',
+              dateTimeLabelFormats: { // don't display the dummy year
+                  minute: '%H:%M',
+                  hour: '%H:%M',
+                  day: '%e. %b'
+              },
+              title: {
+                  text: 'Date'
+              }
+          },
+          yAxis: {
+              minPadding: 0.2,
+              maxPadding: 0.2,
+              title: {
+                  text: 'Precio en CLP'
+              },
+              min: 0
+          },
+
+
+          plotOptions: {
+              spline: {
+                  marker: {
+                      enabled: true
+                  }
+              }
+          },
+
+          series: [{
+              name: 'ETH',
+              data: []
+          }, {
+              name: 'BTC',
+              data: []
+          }, {
+              name: 'DASH',
+              data: []
+          }]
+        });
+        var obtenerMetricas;
+        $(document).ready(() => {
+            Highcharts.setOptions({
+                    global: {
+                        useUTC: false
+                    }
+                });
+        });
+    </script>
+  </body>
+</html>
